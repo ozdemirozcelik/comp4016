@@ -1,77 +1,37 @@
 
 ### Assignment
-Create an application with any language and framework of your choice
-Create an image of the application using DockerFile and push it up to DockerHub (or a registry of your choice)
-Submit a file with relevant information so I can test and verify your image
+- Update your application with any language and framework of your choice.
+- Create an image of the application using DockerFile and push it up to DockerHub (or a registry of your choice)
+- Create Kubernetes configuration to run your application
+- Submit a zipped up folder with your files so I can apply your Kubernetes config files
+- Use a Workload to run your new image. I will accept any as long as it let's me hit the new endpoints defined below.
 
-### Test:
+Use a Service with type NodePort. I will be calling your endpoints as localhost:8080/<ENDPOINT>. 
 
-1. A simple GET request
+Your Kubernetes configuration should create and use the namespace of your username. For example my namespace would be plalli11. 
+
+3 endpoints your application should support:
+
+A GET request for the ConfigMap value
+For example, the ConfigMap may look like
+data:
+  configValue: snake
 Request:
-```
-curl localhost:8080/foo
-```
-
+curl localhost:8080/configValue
 Response:
-```
-bar
-```
+snake
+The key configValue should be set to something in your ConfigMap. I will change it to a different value, rollout the pods and test to see if the new value is returned.
 
-2. A POST request where the JSON body directly changes the response. The name in the response will be whatever was set in the JSON body.
+A GET request for the Secret value. Use an Opaque secret with the key secretValue.
 Request:
-```
-curl for windows:
-curl -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d "{\"name\": \"Prabh\"}" http://localhost:8080/hello
-```
-
-Request:
-```
-curl for linux:
-curl -H "Accept: application/json" -H "Content-Type: application/json" -X POST --data '{"name": "Prabh"}' localhost:8080/hello
-```
-
+curl localhost:8080/secretValue
 Response:
-```
-Hello Prabh!
-```
+secretSnake
+The key secretValue should be set to something in your Secret. I will change it to a different value, rollout the pods and test to see if the new value is returned.
 
-3. A GET request to exit the running container
+A GET request for an environment value. Add an env value to your workload file.
 Request:
-```
-curl localhost:8080/kill
-```
-
+curl localhost:8080/envValue
 Response:
-(I won't check the response, it can be anything. I'll check if the container is still running)
-
-### Docker:
-
-1. Build the docker image
-```
-docker build -t ozdemirozcelik/comp4016_1 .
-```
-
-2. Login to docker hub
-```
-docker login
-```
-
-3. Push the image to docker hub
-```
-docker push ozdemirozcelik/comp4016_1
-```
-
-4. pull the docker image
-```
-docker pull ozdemirozcelik/comp4016_1
-```
-
-5. run a container from image
-```
-docker run -p 8080:8080 -d ozdemirozcelik/comp4016_1
-```
-
-6. check running container
-```
-docker ps
-```
+environmentSnake
+The key envValue should be set to something in your environment values. I will change it to a different value, rollout the pods and test to see if the new value is returned.

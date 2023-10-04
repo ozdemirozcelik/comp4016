@@ -1,78 +1,58 @@
-const http = require('http');
-const process = require('process');
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
 const port = process.env.PORT || 8080;
 
+app.use(bodyParser.json());
 
-const listener = async (req, res) => {
+app.get('/foo', (req, res) => {
+  res.status(200).send('bar');
+});
 
-    try {
+app.post('/hello', (req, res) => {
+  const jsonData = req.body;
 
-        const url = req.url;
-        const method = req.method;
-    
-        if (url === '/foo' && method === 'GET') {
-            
-            // send back content
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            res.write(`bar`);
-            res.end();
-     
-        } else if (url === '/hello' && method === 'POST') {
+  if (jsonData && jsonData.name) {
+    res.status(200).send(`Hello ${jsonData.name}!`);
+  } else {
+    res.status(400).send('Bad Request');
+  }
+});
 
-            let body = '';
-            req.on('data', chunk => {
-                body += chunk.toString();
-            });
+app.get('/kill', (req, res) => {
+  shutdownServer();
+  res.status(200).send('Server is shutting down...');
+});
 
-            req.on('end', () => {
-                const jsonData = JSON.parse(body);
-    
-                if (jsonData && jsonData.name) {
-                    // send back content
-                    res.writeHead(200, {'Content-Type': 'text/html'});
-                    res.write(`Hello ${jsonData.name}!`);
-                    res.end();
-                } else {
-                    res.writeHead(400, {'Content-Type': 'text/html'});
-                    res.write(`Bad Request`);
-                    res.end();
-                }
+app.get('/configValue', (req, res) => {
+    const configValue = process.env.CONFIG_VALUE || 'not set';
+    res.status(200).send(configValue);
+  });
 
-            });
-               
-        } else if (url === '/kill' && method === 'GET') {
-            
-            // Close the server using the shutdown function
-            shutdownServer();
-            // Send a response indicating that the server is shutting down
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('Server is shutting down...');
-            res.end();
-     
-        } 
-        
-    } catch (err) {
-            console.log(err);
-            res.writeHead(500, {'Content-Type': 'text/html'});
-            res.write(`Server Error`);
-            res.end();
-        }
-    
+app.get('/secretValue', (req, res) => {
+const secretValue = process.env.SECRET_VALUE || 'not set';
+res.status(200).send(secretValue);
+});
 
-};
+app.get('/envValue', (req, res) => {
+    const envValue = process.env.ENV_VALUE || 'not set';
+    res.status(200).send(envValue);
+});
 
-const server = http.createServer(listener);
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send('Server Error');
+});
 
-server.listen(port,(() => {
-    console.log("Server is running on port 8080");
-}));
-
+const server = app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 
 // Function to shut down the server
 function shutdownServer() {
-    server.close(() => {
-      console.log('Server has been shut down!');
-      process.exit(0);
-    });
-  }
-
+  server.close(() => {
+    console.log('Server has been shut down!');
+    process.exit(0);
+  });
+}
