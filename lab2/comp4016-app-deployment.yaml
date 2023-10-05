@@ -52,7 +52,7 @@ spec:
     - protocol: TCP
       port: 8080  # App listens on this port
       targetPort: 8080  # App runs on this port
-      nodePort: 32000 # Expose this port on the nodes
+      nodePort: 30000 # Expose this port on the nodes
 
 ---
 

@@ -1,4 +1,3 @@
-
 ### Assignment
 Create an application with any language and framework of your choice
 Create an image of the application using DockerFile and push it up to DockerHub (or a registry of your choice)
