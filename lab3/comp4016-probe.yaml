@@ -1,0 +1,48 @@
+# Kubernetes namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: probe
+
+---
+
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comp4016-deployment-probe
+  namespace: probe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comp4016-app-probe
+  template:
+    metadata:
+      labels:
+        app: comp4016-app-probe
+    spec:
+      containers:
+      - name: comp4016-container-probe
+        image: ozdemirozcelik/comp4016_probe
+        ports:
+        - containerPort: 8080
+
+---
+
+# Service with type NodePort
+apiVersion: v1
+kind: Service
+metadata:
+  name: comp4016-app-service-probe
+  namespace: probe
+spec:
+  type: NodePort
+  selector:
+    app: comp4016-app-probe
+  ports:
+    - protocol: TCP
+      port: 8080  # App listens on this port
+      targetPort: 8080  # App runs on this port
+      nodePort: 30010 # Expose this port on the nodes
+

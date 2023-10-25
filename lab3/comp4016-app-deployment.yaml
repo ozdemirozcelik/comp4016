@@ -1,0 +1,136 @@
+# Kubernetes namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ozdemirozcelik
+
+---
+
+# StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: comp4016-statefulset
+  namespace: ozdemirozcelik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comp4016-app
+  serviceName: "comp4016-service" # usefull for making the pods discoverable
+  template:
+    metadata:
+      labels:
+        app: comp4016-app
+    spec:
+      containers:
+      - name: comp4016-container
+        image: ozdemirozcelik/comp4016_3
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENV_VALUE
+          value: environmentSnake
+        envFrom:
+        - configMapRef:
+            name: comp4016-app-config
+        - secretRef:
+            name: comp4016-app-secret
+        resources: # resource limits for the individual containers in pods
+          limits:
+            cpu: "0.99"
+          requests:
+            cpu: "0.01" # minimum amount of resources that a container requires to run
+        volumeMounts: # mount the config volume to the container
+        - name: config-volume
+          mountPath: /config
+        readinessProbe:
+          httpGet:
+            path: /isAlive
+            port: 8080
+            scheme: HTTP
+            # host: 10.100.134.35  # this works
+            host: comp4016-app-service-probe.probe  # having problems with this
+            # host: comp4016-app-service-probe.probe.svc.cluster.local  # the service name and namespace of the probe
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+  volumeClaimTemplates:  # define the config volume
+  - metadata:
+      name: config-volume
+    spec:
+      accessModes: ["ReadWriteOnce"] # only one pod can mount the volume
+      resources:
+        requests:
+          storage: 100Mi  # adjust the size of the volume
+---
+
+# Service with type LoadBalancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: comp4016-app-service
+  namespace: ozdemirozcelik
+spec:
+  type: LoadBalancer
+  selector:
+    app: comp4016-app
+  ports:
+    - protocol: TCP
+      port: 30000  # App listens on this port
+      targetPort: 8080  # App runs on this port
+
+---
+
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: comp4016-hpa
+  namespace: ozdemirozcelik
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: comp4016-statefulset
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource: # scale the number of pod replicas based on resource utilization metrics across all containers in the StatefulSet
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 30
+  # behavior:
+  #   scaleUp:
+  #     policies:
+  #     - type: Pods
+  #       value: 1  # amount to scale up by
+  #       periodSeconds: 10  # lower value for faster scaling
+  #   scaleDown:
+  #     policies:
+  #     - type: Pods
+  #       value: 2  # amount to scale down by
+  #       periodSeconds: 10  #  lower value for faster scaling
+---
+
+# Environment variables from ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comp4016-app-config
+  namespace: ozdemirozcelik
+data:
+  CONFIG_VALUE: snake
+  STRING_VALUE: "" # initial string value
+---
+
+# Environment variables from Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: comp4016-app-secret
+  namespace: ozdemirozcelik
+data:
+  SECRET_VALUE: c2VjcmV0U25ha2U= # Base64-encoded value of 'secretSnake'
