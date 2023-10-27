@@ -73,7 +73,7 @@ app.get('/getString', (req, res) => {
     const savedString = fs.readFileSync('/config/STRING_VALUE', 'utf8');
     res.status(200).send(savedString);
   } catch (error) {
-    res.status(404).send('Not Found');
+    res.status(404).send('404 Not Found');
   }
 });
 

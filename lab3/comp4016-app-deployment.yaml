@@ -17,7 +17,7 @@ spec:
   selector:
     matchLabels:
       app: comp4016-app
-  serviceName: "comp4016-service" # usefull for making the pods discoverable
+  serviceName: "comp4016-service" # useful for making the pods discoverable
   template:
     metadata:
       labels:
@@ -45,13 +45,19 @@ spec:
         - name: config-volume
           mountPath: /config
         readinessProbe:
-          httpGet:
-            path: /isAlive
-            port: 8080
-            scheme: HTTP
-            # host: 10.100.134.35  # this works
-            host: comp4016-app-service-probe.probe  # having problems with this
-            # host: comp4016-app-service-probe.probe.svc.cluster.local  # the service name and namespace of the probe
+          exec:
+            command:
+              - "curl"
+              - "--fail"
+              - "http://comp4016-app-service-probe.probe.svc:30010/isAlive"
+          # Not possible to expose DNS service to readiness probe
+          # httpGet:
+          #   path: /isAlive
+          #   port: 8080
+          #   scheme: HTTP
+            # host: 10.100.134.35  # using IP works
+            # host: comp4016-app-service-probe.probe  # does not work
+            # host: comp4016-app-service-probe.probe.svc.cluster.local  # does not work
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 5
@@ -59,7 +65,7 @@ spec:
   - metadata:
       name: config-volume
     spec:
-      accessModes: ["ReadWriteOnce"] # only one pod can mount the volume
+      accessModes: ["ReadWriteOnce"]
       resources:
         requests:
           storage: 100Mi  # adjust the size of the volume
@@ -123,7 +129,6 @@ metadata:
   namespace: ozdemirozcelik
 data:
   CONFIG_VALUE: snake
-  STRING_VALUE: "" # initial string value
 ---
 
 # Environment variables from Secret

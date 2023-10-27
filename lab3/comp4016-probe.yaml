@@ -37,12 +37,11 @@ metadata:
   name: comp4016-app-service-probe
   namespace: probe
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: comp4016-app-probe
   ports:
     - protocol: TCP
-      port: 8080  # App listens on this port
+      port: 30010  # App listens on this port
       targetPort: 8080  # App runs on this port
-      nodePort: 30010 # Expose this port on the nodes
 

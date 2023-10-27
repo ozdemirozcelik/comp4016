@@ -19,8 +19,10 @@ Request:
 curl localhost:30000/saveString 
 The response won't be checked.
 
+curl -H "Accept: application/json" -H "Content-Type: application/json" -X POST --data '{"data": "savedSnake"}' localhost:30000/saveString
+
 curl for windows:
-curl -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d "{\"string\": \"Snake\"}" http://localhost:30000/saveString
+curl -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d "{\"string\": \"savedSnake\"}" http://localhost:30000/saveString
 
 
 A GET request to get the "saved" string from the volume from the endpoint above.
