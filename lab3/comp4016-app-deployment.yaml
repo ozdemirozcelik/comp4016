@@ -59,7 +59,7 @@ spec:
             # host: comp4016-app-service-probe.probe  # does not work
             # host: comp4016-app-service-probe.probe.svc.cluster.local  # does not work
           initialDelaySeconds: 5
-          periodSeconds: 60
+          periodSeconds: 30
           timeoutSeconds: 5
   volumeClaimTemplates:  # define the config volume
   - metadata:

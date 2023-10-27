@@ -13,7 +13,7 @@ metadata:
   name: comp4016-deployment-probe
   namespace: probe
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: comp4016-app-probe
