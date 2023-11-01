@@ -6,6 +6,40 @@ metadata:
 
 ---
 
+# PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comp4016-config-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+
+---
+
+# PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config-volume-claim
+  namespace: ozdemirozcelik
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi  # match the PersistentVolume
+
+---
+
 # StatefulSet
 apiVersion: apps/v1
 kind: StatefulSet
@@ -23,9 +57,16 @@ spec:
       labels:
         app: comp4016-app
     spec:
+      volumes:
+      - name: config-volume-storage
+        persistentVolumeClaim:
+          claimName: config-volume-claim # match the PersistentVolumeClaim
       containers:
       - name: comp4016-container
         image: ozdemirozcelik/comp4016_3
+        volumeMounts:
+        - name: config-volume-storage # match the volume name
+          mountPath: "/config"  # mount the volume at this path
         ports:
         - containerPort: 8080
         env:
@@ -41,9 +82,6 @@ spec:
             cpu: "0.99"
           requests:
             cpu: "0.01" # minimum amount of resources that a container requires to run
-        volumeMounts: # mount the config volume to the container
-        - name: config-volume
-          mountPath: /config
         readinessProbe:
           exec:
             command:
@@ -61,14 +99,6 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 30
           timeoutSeconds: 5
-  volumeClaimTemplates:  # define the config volume
-  - metadata:
-      name: config-volume
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 100Mi  # adjust the size of the volume
 ---
 
 # Service with type LoadBalancer
